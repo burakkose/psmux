@@ -647,6 +647,7 @@ pub fn remote_mouse_up(app: &mut AppState, x: u16, y: u16) {
         if let (Some(a), Some(p)) = (app.copy_anchor, app.copy_pos) {
             if a != p {
                 let _ = yank_selection(app);
+                exit_copy_mode(app);
             } else {
                 app.copy_anchor = None;
             }
@@ -927,7 +928,10 @@ pub fn handle_pane_mouse(app: &mut AppState, pane_id: usize, button: u8, col: i1
             }
             // Auto-yank if real selection exists (anchor != pos)
             if let (Some(a), Some(p)) = (app.copy_anchor, app.copy_pos) {
-                if a != p { let _ = yank_selection(app); }
+                if a != p {
+                    let _ = yank_selection(app);
+                    exit_copy_mode(app);
+                }
             }
         }
         return;

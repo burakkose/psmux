@@ -10,7 +10,7 @@ use crate::tree::{active_pane, active_pane_mut, compute_rects, compute_split_bor
     split_sizes_at, adjust_split_sizes, path_exists, resize_all_panes};
 use crate::pane::{create_window, split_active};
 use crate::commands::{execute_action, execute_command_prompt, execute_command_string};
-use crate::config::normalize_key_for_binding;
+use crate::config::{normalize_key_for_binding, parse_key_string};
 use crate::copy_mode::{enter_copy_mode, exit_copy_mode, switch_with_copy_save, move_copy_cursor,
     scroll_copy_up, scroll_copy_down, scroll_pane_scrollback, paste_latest, yank_selection,
     search_copy_mode, search_next, search_prev, scroll_to_top, scroll_to_bottom};
@@ -3123,6 +3123,17 @@ pub fn send_key_to_active(app: &mut AppState, k: &str) -> io::Result<()> {
 
     // --- Copy mode: full vi-style key table ---
     if matches!(app.mode, Mode::CopyMode) {
+        let table_name = if app.mode_keys == "vi" { "copy-mode-vi" } else { "copy-mode" };
+        if let Some(key) = parse_key_string(k).map(normalize_key_for_binding) {
+            if let Some(bind) = app.key_tables.get(table_name)
+                .and_then(|t| t.iter().find(|b| b.key == key))
+                .cloned()
+            {
+                let _ = execute_action(app, &bind.action)?;
+                return Ok(());
+            }
+        }
+
         match k {
             "esc" | "q" => {
                 exit_copy_mode(app);

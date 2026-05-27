@@ -503,6 +503,19 @@ fn bind_key_flag_T_custom_table() {
 }
 
 #[test]
+fn send_key_in_copy_mode_uses_copy_mode_table_binding() {
+    let mut app = mock_app_with_window();
+    app.mode = Mode::CopyMode;
+    app.mode_keys = "vi".to_string();
+    execute_command_string(&mut app, "bind-key -T copy-mode-vi C-c display-message copied").unwrap();
+
+    crate::input::send_key_to_active(&mut app, "C-c").unwrap();
+
+    let message = app.status_message.as_ref().map(|(msg, _, _)| msg.as_str());
+    assert_eq!(message, Some("copied"));
+}
+
+#[test]
 fn bind_key_flag_r_repeat() {
     let mut app = mock_app_with_window();
     execute_command_string(&mut app, "bind-key -r n next-window").unwrap();
